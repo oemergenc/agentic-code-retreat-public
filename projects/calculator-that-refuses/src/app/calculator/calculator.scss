@@ -99,6 +99,26 @@
   }
 }
 
+/* Locale switcher */
+.locale-switcher {
+  position: absolute;
+  top: var(--rds-spacing-6);
+  left: var(--rds-spacing-8);
+  display: flex;
+  gap: var(--rds-spacing-2);
+
+  button[dsa-button] {
+    font-size: 0.8rem;
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+
+    &.active-locale {
+      opacity: 1;
+      font-weight: 700;
+    }
+  }
+}
+
 .sparkles {
   position: absolute;
   inset: 0;

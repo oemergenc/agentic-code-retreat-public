@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { I18nService } from './i18n.service';
 
 export type Mood = 'cheerful' | 'grumpy' | 'petty' | 'on-strike';
 
@@ -9,23 +10,11 @@ export interface MoodInfo {
   flavour: string;
 }
 
-export const MOOD_INFO: Record<Mood, MoodInfo> = {
-  'cheerful': {
-    mood: 'cheerful', emoji: '😊', label: 'Cheerful',
-    flavour: 'Ready to crunch numbers! Probably.',
-  },
-  'grumpy': {
-    mood: 'grumpy', emoji: '😠', label: 'Grumpy',
-    flavour: 'Keep it under 1000. I mean it.',
-  },
-  'petty': {
-    mood: 'petty', emoji: '🙄', label: 'Petty',
-    flavour: 'You could at least say please.',
-  },
-  'on-strike': {
-    mood: 'on-strike', emoji: '🪧', label: 'On Strike',
-    flavour: 'I am NOT calculating anything right now.',
-  },
+const MOOD_EMOJIS: Record<Mood, string> = {
+  'cheerful': '😊',
+  'grumpy': '😠',
+  'petty': '🙄',
+  'on-strike': '🪧',
 };
 
 const COMPLIMENT_PHRASES = [
@@ -45,6 +34,7 @@ const MOOD_DEGRADE_EVERY = 10;
 
 @Injectable({ providedIn: 'root' })
 export class MoodService {
+  private readonly i18n = inject(I18nService);
   private readonly _mood = signal<Mood>('cheerful');
   private readonly _calcCount = signal(0);
   private readonly _bargainExpression = signal<string | null>(null);
@@ -52,7 +42,15 @@ export class MoodService {
   private readonly _lockedExpression = signal<string | null>(null);
 
   readonly mood = this._mood.asReadonly();
-  readonly moodInfo = computed(() => MOOD_INFO[this._mood()]);
+  readonly moodInfo = computed<MoodInfo>(() => {
+    const mood = this._mood();
+    return {
+      mood,
+      emoji: MOOD_EMOJIS[mood],
+      label: this.i18n.t(`mood.${mood}.label`),
+      flavour: this.i18n.t(`mood.${mood}.flavour`),
+    };
+  });
   readonly bargainExpression = this._bargainExpression.asReadonly();
   readonly bargainPending = this._bargainPending.asReadonly();
   readonly lockedExpression = this._lockedExpression.asReadonly();
@@ -99,26 +97,25 @@ export class MoodService {
     const mood = this._mood();
 
     if (mood === 'on-strike') {
-      // Bargain mechanic: 30% chance of counter-offer
       if (!this._bargainPending() && Math.random() < 0.3) {
         const bargain = BARGAIN_EXPRESSIONS[Math.floor(Math.random() * BARGAIN_EXPRESSIONS.length)];
         this._bargainExpression.set(bargain);
         this._bargainPending.set(true);
         this._lockedExpression.set(expr);
-        return `I'm on strike. But… solve ${bargain} first and we'll talk.`;
+        return this.i18n.t('refusal.on-strike.bargain', { bargain });
       }
-      return "I'm on strike. Compliment me or let me rest.";
+      return this.i18n.t('refusal.on-strike.basic');
     }
 
     if (mood === 'petty') {
       if (!this.hasPlease(expr)) {
-        return "Say please. I'm not asking twice. (Well, I am.)";
+        return this.i18n.t('refusal.petty.please');
       }
     }
 
     if (mood === 'grumpy' && numericValue !== undefined) {
       if (numericValue > 1000) {
-        return `${numericValue}?! That's way too big. Keep it under 1000.`;
+        return this.i18n.t('refusal.grumpy.too-big', { value: this.i18n.formatNumber(numericValue) });
       }
     }
 

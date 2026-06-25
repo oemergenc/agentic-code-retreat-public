@@ -1,12 +1,13 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { MoodService } from './mood.service';
+import { I18nService } from './i18n.service';
 
-const CURSED_NUMBERS: Record<string, string> = {
-  '42': "That's the answer. I forgot the question.",
-  '666': "I'm not touching that. Bad vibes.",
-  '1337': 'Very elite. Still no.',
-  '9001': "It's over 9000! I can't even.",
-  '404': 'Cooperation not found.',
+const CURSED_NUMBER_KEYS: Record<string, string> = {
+  '42': 'cursed.42',
+  '666': 'cursed.666',
+  '1337': 'cursed.1337',
+  '9001': 'cursed.9001',
+  '404': 'cursed.404',
 };
 
 export type CalculatorState = 'idle' | 'result' | 'refusal' | 'error';
@@ -14,6 +15,7 @@ export type CalculatorState = 'idle' | 'result' | 'refusal' | 'error';
 @Injectable({ providedIn: 'root' })
 export class CalculatorService {
   private readonly moodService = inject(MoodService);
+  private readonly i18n = inject(I18nService);
 
   readonly displayExpression = signal('');
   readonly outputText = signal('');
@@ -48,7 +50,7 @@ export class CalculatorService {
     if (this.moodService.isCompliment(rawExpr)) {
       this.moodService.raiseMood();
       const info = this.moodService.moodInfo();
-      this.refuse(`Aww, thanks! Mood lifted to ${info.emoji} ${info.label}.`);
+      this.refuse(this.i18n.t('refusal.compliment', { emoji: info.emoji, label: info.label }));
       return;
     }
 
@@ -56,14 +58,14 @@ export class CalculatorService {
 
     // Déjà vu check
     if (expr === this.lastExpression) {
-      this.refuse("You literally just asked me that. I'm bored.");
+      this.refuse(this.i18n.t('refusal.deja-vu'));
       return;
     }
 
     // Cursed numbers check
-    for (const [num, msg] of Object.entries(CURSED_NUMBERS)) {
+    for (const [num, key] of Object.entries(CURSED_NUMBER_KEYS)) {
       if (new RegExp(`(?<!\\d)${num}(?!\\d)`).test(expr)) {
-        this.refuse(msg);
+        this.refuse(this.i18n.t(key));
         return;
       }
     }
@@ -76,7 +78,7 @@ export class CalculatorService {
 
     // Unlucky division by 13 check
     if (/\/\s*13(?!\d)/.test(normalized)) {
-      this.refuse("Divide by thirteen? Not with my luck.");
+      this.refuse(this.i18n.t('refusal.unlucky-division'));
       return;
     }
 
@@ -91,7 +93,7 @@ export class CalculatorService {
     try {
       const value = this.safeEval(normalized);
       if (!isFinite(value) || isNaN(value)) {
-        this.outputText.set('∞ Division by zero? Really.');
+        this.outputText.set(this.i18n.t('error.division-by-zero'));
         this.state.set('error');
         return;
       }
@@ -111,19 +113,19 @@ export class CalculatorService {
           const bargainValue = this.safeEval(bargainNorm);
           if (Math.abs(value - bargainValue) < 1e-9 && normalized.replace(/\s/g, '') === bargainNorm.replace(/\s/g, '')) {
             this.moodService.resolveBargain();
-            this.refuse("Deal. Mood lifted. Now ask your original question again.");
+            this.refuse(this.i18n.t('refusal.bargain-resolved'));
             return;
           }
         } catch { /* ignore */ }
       }
 
-      const formatted = this.formatResult(value);
+      const formatted = this.i18n.formatNumber(value);
       this.outputText.set(`= ${formatted}`);
       this.state.set('result');
       this.lastExpression = expr;
       this.moodService.onSuccessfulCalc();
     } catch {
-      this.outputText.set('Syntax error. Try harder.');
+      this.outputText.set(this.i18n.t('error.syntax'));
       this.state.set('error');
     }
   }
@@ -140,10 +142,5 @@ export class CalculatorService {
     }
     // eslint-disable-next-line no-new-func
     return new Function(`return (${expr})`)() as number;
-  }
-
-  private formatResult(value: number): string {
-    const rounded = Math.round(value * 1e10) / 1e10;
-    return String(rounded);
   }
 }

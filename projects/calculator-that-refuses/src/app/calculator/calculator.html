@@ -10,6 +10,24 @@
     <span class="toggle-label">😈</span>
   </div>
 
+  <!-- 🌍 Locale switcher -->
+  <div class="locale-switcher">
+    <button
+      dsa-button
+      type="button"
+      hierarchy="secondary"
+      [class.active-locale]="i18n.locale() === 'en-US'"
+      (click)="switchLocale('en-US')"
+    >🇬🇧 EN</button>
+    <button
+      dsa-button
+      type="button"
+      hierarchy="secondary"
+      [class.active-locale]="i18n.locale() === 'de-DE'"
+      (click)="switchLocale('de-DE')"
+    >🇩🇪 DE</button>
+  </div>
+
   <div class="sparkles" aria-hidden="true">
     @for (_ of [1,2,3,4,5,6,7,8]; track $index) {
       <span class="sparkle" [style.--i]="$index"></span>

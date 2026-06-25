@@ -5,6 +5,7 @@ import { DsaToastService } from '@dsa/design-system-angular';
 import { CalculatorService } from './calculator.service';
 import { SoundService } from './sound.service';
 import { MoodService } from './mood.service';
+import { I18nService, Locale } from './i18n.service';
 
 interface CalcButton {
   label: string;
@@ -31,6 +32,7 @@ const MISCHIEF_TOOLTIPS = [
 export class CalculatorComponent implements AfterViewInit {
   protected readonly calc = inject(CalculatorService);
   protected readonly mood = inject(MoodService);
+  protected readonly i18n = inject(I18nService);
   private readonly toast = inject(DsaToastService);
   private readonly sound = inject(SoundService);
   private readonly calcWrapper = viewChild<ElementRef>('calcWrapper');
@@ -173,6 +175,10 @@ export class CalculatorComponent implements AfterViewInit {
     } else {
       this.resetNapTimer();
     }
+  }
+
+  protected switchLocale(locale: Locale): void {
+    this.i18n.setLocale(locale);
   }
 
   protected onEqualsHover(): void {
