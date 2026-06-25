@@ -1,4 +1,4 @@
-import { Component, inject, effect, HostListener } from '@angular/core';
+import { Component, inject, effect, HostListener, AfterViewInit, ElementRef, viewChild } from '@angular/core';
 import { DsaButtonComponent } from '@dsa/design-system-angular/button';
 import { DsaToastService } from '@dsa/design-system-angular';
 import { CalculatorService } from './calculator.service';
@@ -17,10 +17,11 @@ interface CalcButton {
   templateUrl: './calculator.html',
   styleUrl: './calculator.scss',
 })
-export class CalculatorComponent {
+export class CalculatorComponent implements AfterViewInit {
   protected readonly calc = inject(CalculatorService);
   private readonly toast = inject(DsaToastService);
   private readonly sound = inject(SoundService);
+  private readonly calcWrapper = viewChild<ElementRef>('calcWrapper');
 
   protected readonly buttons: CalcButton[] = [
     { label: 'C', value: 'clear', type: 'action' },
@@ -67,6 +68,10 @@ export class CalculatorComponent {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.calcWrapper()?.nativeElement.focus();
+  }
+
   protected press(btn: CalcButton): void {
     this.sound.playClick();
     switch (btn.value) {
@@ -84,7 +89,7 @@ export class CalculatorComponent {
     }
   }
 
-  @HostListener('window:keydown', ['$event'])
+  @HostListener('document:keydown', ['$event'])
   protected onKeydown(event: KeyboardEvent): void {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
 
