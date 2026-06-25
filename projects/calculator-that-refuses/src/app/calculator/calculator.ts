@@ -80,6 +80,7 @@ export class CalculatorComponent implements AfterViewInit {
   ];
 
   protected readonly cButtonScale = computed(() => {
+    if (!this.mischiefEnabled()) return 1;
     const len = this.calc.displayExpression().length;
     return Math.max(0.4, 1 - len * 0.04);
   });
