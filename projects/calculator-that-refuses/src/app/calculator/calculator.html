@@ -11,35 +11,72 @@
       <div class="expression" [class.empty]="!calc.displayExpression()">
         {{ calc.displayExpression() || '0' }}
       </div>
-      <div
-        class="output"
-        [class.result]="calc.state() === 'result'"
-        [class.refusal]="calc.state() === 'refusal'"
-        [class.error]="calc.state() === 'error'"
-        [class.visible]="calc.outputText()"
-      >
-        {{ calc.outputText() }}
-      </div>
+      <!-- Fake result overlay (mischief) -->
+      @if (fakeOutput()) {
+        <div class="output visible fake-result">{{ fakeOutput() }}</div>
+      } @else {
+        <div
+          class="output"
+          [class.result]="calc.state() === 'result'"
+          [class.refusal]="calc.state() === 'refusal'"
+          [class.error]="calc.state() === 'error'"
+          [class.visible]="calc.outputText()"
+        >
+          {{ calc.outputText() }}
+        </div>
+      }
     </div>
 
     <!-- Keypad -->
     <div class="keypad">
-      @for (btn of buttons; track btn.label) {
-        <button
-          dsa-button
-          type="button"
-          [class.wide]="btn.wide"
-          [class.btn-digit]="btn.type === 'digit'"
-          [class.btn-operator]="btn.type === 'operator'"
-          [class.btn-action]="btn.type === 'action'"
-          [class.btn-equals]="btn.type === 'equals'"
-          [hierarchy]="btn.type === 'equals' ? 'primary' : 'secondary'"
-          [intention]="btn.value === 'clear' ? 'danger' : 'default'"
-          (click)="press(btn)"
-        >
-          {{ btn.label }}
-        </button>
+      @for (btn of buttons; track $index; let idx = $index) {
+        @if (btn.type === 'equals') {
+          <!-- Moving = button -->
+          <button
+            dsa-button
+            type="button"
+            class="btn-equals"
+            hierarchy="primary"
+            [style.transform]="'translate(' + equalsOffset().x + 'px, ' + equalsOffset().y + 'px)'"
+            (mouseenter)="onEqualsHover()"
+            (mouseleave)="onEqualsLeave()"
+            (click)="press(btn, idx)"
+          >
+            =
+          </button>
+        } @else {
+          <button
+            dsa-button
+            type="button"
+            [class.wide]="btn.wide"
+            [class.btn-digit]="btn.type === 'digit'"
+            [class.btn-operator]="btn.type === 'operator'"
+            [class.btn-action]="btn.type === 'action'"
+            [hierarchy]="'secondary'"
+            [intention]="btn.value === 'clear' ? 'danger' : 'default'"
+            [style.transform]="btn.value === 'clear' ? 'scale(' + cButtonScale() + ')' : ''"
+            (click)="press(btn, idx)"
+          >
+            {{ getLabel(btn, idx) }}
+          </button>
+        }
       }
     </div>
   </div>
+
+  <!-- Unsolicited break popup -->
+  @if (popupVisible()) {
+    <div class="popup-overlay">
+      <div class="popup">
+        <div class="popup-emoji">☕</div>
+        <h2>Are you still there?</h2>
+        <p>You've been calculating quite a lot.</p>
+        <p>Take a break. Touch some grass.</p>
+        <p class="popup-countdown">This message will self-destruct in {{ popupCountdown() }}s</p>
+        <button dsa-button type="button" hierarchy="primary" (click)="dismissPopup()">
+          Fine, I'll take a break
+        </button>
+      </div>
+    </div>
+  }
 </div>
