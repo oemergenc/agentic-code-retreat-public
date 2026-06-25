@@ -4,6 +4,7 @@ import { DsaToggleSwitchComponent } from '@dsa/design-system-angular/toggle-swit
 import { DsaToastService } from '@dsa/design-system-angular';
 import { CalculatorService } from './calculator.service';
 import { SoundService } from './sound.service';
+import { MoodService } from './mood.service';
 
 interface CalcButton {
   label: string;
@@ -29,9 +30,15 @@ const MISCHIEF_TOOLTIPS = [
 })
 export class CalculatorComponent implements AfterViewInit {
   protected readonly calc = inject(CalculatorService);
+  protected readonly mood = inject(MoodService);
   private readonly toast = inject(DsaToastService);
   private readonly sound = inject(SoundService);
   private readonly calcWrapper = viewChild<ElementRef>('calcWrapper');
+
+  // mood negotiate input
+  protected readonly negotiateText = signal('');
+  private breakTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly BREAK_RAISE_DELAY = 30_000;
 
   // existing mischief
   protected readonly equalsOffset = signal({ x: 0, y: 0 });
@@ -110,10 +117,32 @@ export class CalculatorComponent implements AfterViewInit {
       }
     });
     this.resetNapTimer();
+    this.resetBreakTimer();
   }
 
   ngAfterViewInit(): void {
     this.calcWrapper()?.nativeElement.focus();
+  }
+
+  private resetBreakTimer(): void {
+    if (this.breakTimer) clearTimeout(this.breakTimer);
+    this.breakTimer = setTimeout(() => {
+      const before = this.mood.mood();
+      this.mood.raiseMood();
+      const after = this.mood.mood();
+      if (before !== after) {
+        this.toast.info({ title: `☕ Rested!`, description: `Mood lifted to ${this.mood.moodInfo().emoji} ${this.mood.moodInfo().label}`, timeout: 3000 });
+      }
+      this.resetBreakTimer();
+    }, this.BREAK_RAISE_DELAY);
+  }
+
+  protected submitNegotiate(): void {
+    const text = this.negotiateText().trim();
+    if (!text) return;
+    this.calc.append(text);
+    this.calc.calculate();
+    this.negotiateText.set('');
   }
 
   private resetNapTimer(): void {
@@ -174,6 +203,7 @@ export class CalculatorComponent implements AfterViewInit {
     this.sound.playClick();
     this.tooltip.set(null);
     this.resetNapTimer();
+    this.resetBreakTimer();
     this.pressCount++;
 
     if (this.mischiefEnabled()) {

@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { MoodService } from './mood.service';
 
 const CURSED_NUMBERS: Record<string, string> = {
   '42': "That's the answer. I forgot the question.",
@@ -12,6 +13,8 @@ export type CalculatorState = 'idle' | 'result' | 'refusal' | 'error';
 
 @Injectable({ providedIn: 'root' })
 export class CalculatorService {
+  private readonly moodService = inject(MoodService);
+
   readonly displayExpression = signal('');
   readonly outputText = signal('');
   readonly state = signal<CalculatorState>('idle');
@@ -38,8 +41,18 @@ export class CalculatorService {
   }
 
   calculate(): void {
-    const expr = this.displayExpression().trim();
-    if (!expr) return;
+    const rawExpr = this.displayExpression().trim();
+    if (!rawExpr) return;
+
+    // Handle compliments for mood negotiation
+    if (this.moodService.isCompliment(rawExpr)) {
+      this.moodService.raiseMood();
+      const info = this.moodService.moodInfo();
+      this.refuse(`Aww, thanks! Mood lifted to ${info.emoji} ${info.label}.`);
+      return;
+    }
+
+    const expr = this.moodService.sanitizeExpression(rawExpr);
 
     // Déjà vu check
     if (expr === this.lastExpression) {
@@ -47,7 +60,7 @@ export class CalculatorService {
       return;
     }
 
-    // Cursed numbers check (match whole numbers, not substrings of larger ones)
+    // Cursed numbers check
     for (const [num, msg] of Object.entries(CURSED_NUMBERS)) {
       if (new RegExp(`(?<!\\d)${num}(?!\\d)`).test(expr)) {
         this.refuse(msg);
@@ -55,7 +68,7 @@ export class CalculatorService {
       }
     }
 
-    // Normalize unicode operators for evaluation
+    // Normalize unicode operators
     const normalized = expr
       .replace(/×/g, '*')
       .replace(/÷/g, '/')
@@ -67,18 +80,48 @@ export class CalculatorService {
       return;
     }
 
+    // Check mood refusal (pre-eval: on-strike and petty checks)
+    const preMoodRefusal = this.moodService.checkMoodRefusal(rawExpr);
+    if (preMoodRefusal) {
+      this.refuse(preMoodRefusal);
+      return;
+    }
+
     // Evaluate
     try {
       const value = this.safeEval(normalized);
       if (!isFinite(value) || isNaN(value)) {
         this.outputText.set('∞ Division by zero? Really.');
         this.state.set('error');
-      } else {
-        const formatted = this.formatResult(value);
-        this.outputText.set(`= ${formatted}`);
-        this.state.set('result');
-        this.lastExpression = expr;
+        return;
       }
+
+      // Check grumpy mood refusal (post-eval: needs the result value)
+      const postMoodRefusal = this.moodService.checkMoodRefusal(rawExpr, value);
+      if (postMoodRefusal) {
+        this.refuse(postMoodRefusal);
+        return;
+      }
+
+      // Check bargain resolution
+      const bargain = this.moodService.bargainExpression();
+      if (bargain) {
+        const bargainNorm = bargain.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+        try {
+          const bargainValue = this.safeEval(bargainNorm);
+          if (Math.abs(value - bargainValue) < 1e-9 && normalized.replace(/\s/g, '') === bargainNorm.replace(/\s/g, '')) {
+            this.moodService.resolveBargain();
+            this.refuse("Deal. Mood lifted. Now ask your original question again.");
+            return;
+          }
+        } catch { /* ignore */ }
+      }
+
+      const formatted = this.formatResult(value);
+      this.outputText.set(`= ${formatted}`);
+      this.state.set('result');
+      this.lastExpression = expr;
+      this.moodService.onSuccessfulCalc();
     } catch {
       this.outputText.set('Syntax error. Try harder.');
       this.state.set('error');

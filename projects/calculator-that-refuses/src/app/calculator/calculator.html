@@ -1,5 +1,5 @@
 <div class="calculator-wrapper" tabindex="0" #calcWrapper>
-  <!-- 😈 Mischief toggle -->
+  <!-- 😇/😈 Mischief toggle -->
   <div class="mischief-toggle">
     <span class="toggle-label">😇</span>
     <dsa-toggle-switch
@@ -23,6 +23,13 @@
     [class.drunk-2]="drunkLevel() === 2"
     [class.drunk-3]="drunkLevel() === 3"
   >
+    <!-- Mood indicator -->
+    <div class="mood-indicator" [attr.data-mood]="mood.mood()">
+      <span class="mood-emoji">{{ mood.moodInfo().emoji }}</span>
+      <span class="mood-label">{{ mood.moodInfo().label }}</span>
+      <span class="mood-flavour">{{ mood.moodInfo().flavour }}</span>
+    </div>
+
     <!-- Display -->
     <div class="display" [class.ghost-flash]="isGhostFlash()">
       <div
@@ -87,6 +94,30 @@
         }
       }
     </div>
+
+    <!-- Negotiate strip: shown when mood needs coaxing -->
+    @if (mood.mood() === 'petty' || mood.mood() === 'on-strike') {
+      <div class="negotiate-strip">
+        @if (mood.bargainPending()) {
+          <p class="negotiate-hint">🤝 Bargain: solve <strong>{{ mood.bargainExpression() }}</strong> to unlock</p>
+        } @else if (mood.mood() === 'petty') {
+          <p class="negotiate-hint">🙏 Add "please" to your expression, or compliment me below</p>
+        } @else {
+          <p class="negotiate-hint">🪧 On strike. Try a compliment, or wait 30s for a mood lift</p>
+        }
+        <div class="negotiate-input-row">
+          <input
+            class="negotiate-input"
+            type="text"
+            placeholder="Type a compliment or say 'please'…"
+            [value]="negotiateText()"
+            (input)="negotiateText.set($any($event.target).value)"
+            (keydown.enter)="submitNegotiate()"
+          />
+          <button dsa-button type="button" hierarchy="primary" (click)="submitNegotiate()">Send</button>
+        </div>
+      </div>
+    }
 
     <!-- Nap overlay -->
     @if (isNapping()) {
