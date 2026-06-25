@@ -5,13 +5,23 @@
     }
   </div>
 
-  <div class="calculator">
+  <div
+    class="calculator"
+    [class.spin]="isSpinning()"
+    [class.drunk-1]="drunkLevel() === 1"
+    [class.drunk-2]="drunkLevel() === 2"
+    [class.drunk-3]="drunkLevel() === 3"
+  >
     <!-- Display -->
-    <div class="display">
-      <div class="expression" [class.empty]="!calc.displayExpression()">
-        {{ calc.displayExpression() || '0' }}
+    <div class="display" [class.ghost-flash]="isGhostFlash()">
+      <div
+        class="expression"
+        [class.empty]="!calc.displayExpression()"
+        [class.corrupted]="corruptedDisplay()"
+      >
+        {{ displayText() || '0' }}
       </div>
-      <!-- Fake result overlay (mischief) -->
+
       @if (fakeOutput()) {
         <div class="output visible fake-result">{{ fakeOutput() }}</div>
       } @else {
@@ -31,19 +41,17 @@
     <div class="keypad">
       @for (btn of buttons; track $index; let idx = $index) {
         @if (btn.type === 'equals') {
-          <!-- Moving = button -->
           <button
             dsa-button
             type="button"
             class="btn-equals"
             hierarchy="primary"
             [style.transform]="'translate(' + equalsOffset().x + 'px, ' + equalsOffset().y + 'px)'"
+            [style.--btn-i]="idx"
             (mouseenter)="onEqualsHover()"
             (mouseleave)="onEqualsLeave()"
             (click)="press(btn, idx)"
-          >
-            =
-          </button>
+          >=</button>
         } @else {
           <button
             dsa-button
@@ -52,16 +60,34 @@
             [class.btn-digit]="btn.type === 'digit'"
             [class.btn-operator]="btn.type === 'operator'"
             [class.btn-action]="btn.type === 'action'"
-            [hierarchy]="'secondary'"
+            hierarchy="secondary"
             [intention]="btn.value === 'clear' ? 'danger' : 'default'"
             [style.transform]="btn.value === 'clear' ? 'scale(' + cButtonScale() + ')' : ''"
+            [style.--btn-i]="idx"
+            (mouseenter)="onBtnHover(idx)"
+            (mouseleave)="onBtnLeave()"
             (click)="press(btn, idx)"
           >
+            @if (tooltip()?.idx === idx) {
+              <span class="mischief-tooltip">{{ tooltip()!.text }}</span>
+            }
             {{ getLabel(btn, idx) }}
           </button>
         }
       }
     </div>
+
+    <!-- Nap overlay -->
+    @if (isNapping()) {
+      <div class="nap-overlay" (click)="wakeUp()">
+        <div class="zzz-container" aria-hidden="true">
+          <span>z</span><span>z</span><span>Z</span>
+        </div>
+        <div class="nap-emoji">😴</div>
+        <p>Calculator is napping.</p>
+        <p>Click to wake it up.</p>
+      </div>
+    }
   </div>
 
   <!-- Unsolicited break popup -->

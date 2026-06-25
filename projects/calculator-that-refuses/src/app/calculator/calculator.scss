@@ -25,6 +25,51 @@
   100% { transform: scale(1); }
 }
 
+@keyframes wobble-light {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(1deg) translateX(1px); }
+  75%  { transform: rotate(-1deg) translateX(-1px); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes wobble-medium {
+  0%   { transform: rotate(0deg); }
+  20%  { transform: rotate(3deg) translateX(3px); }
+  50%  { transform: rotate(-3deg) translateX(-3px); }
+  80%  { transform: rotate(2deg) translateX(2px); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes wobble-heavy {
+  0%   { transform: rotate(0deg) scale(1); }
+  15%  { transform: rotate(6deg) translateX(5px) scale(1.02); }
+  35%  { transform: rotate(-6deg) translateX(-5px) scale(0.98); }
+  55%  { transform: rotate(4deg) translateX(4px); }
+  75%  { transform: rotate(-4deg) translateX(-4px); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes full-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes nap-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes zzz-float {
+  0%   { transform: translateY(0) scale(1); opacity: 0.6; }
+  50%  { opacity: 1; }
+  100% { transform: translateY(-30px) scale(1.3); opacity: 0; }
+}
+
+@keyframes ghost-flash {
+  0%, 100% { background: transparent; }
+  50%       { background: var(--rds-color-background-accent-warning); }
+}
+
 :host {
   display: block;
 }
@@ -64,6 +109,26 @@
   padding: var(--rds-spacing-8);
   width: 340px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease;
+
+  &.spin {
+    animation: full-spin 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  }
+
+  &.drunk-1 button[dsa-button] {
+    animation: wobble-light 0.8s ease-in-out infinite;
+    animation-delay: calc(var(--btn-i, 0) * 80ms);
+  }
+
+  &.drunk-2 button[dsa-button] {
+    animation: wobble-medium 0.6s ease-in-out infinite;
+    animation-delay: calc(var(--btn-i, 0) * 60ms);
+  }
+
+  &.drunk-3 button[dsa-button] {
+    animation: wobble-heavy 0.4s ease-in-out infinite;
+    animation-delay: calc(var(--btn-i, 0) * 40ms);
+  }
 }
 
 /* Display */
@@ -77,6 +142,11 @@
   flex-direction: column;
   justify-content: flex-end;
   gap: var(--rds-spacing-3);
+  position: relative;
+
+  &.ghost-flash {
+    animation: ghost-flash 0.3s ease;
+  }
 }
 
 .expression {
@@ -89,6 +159,11 @@
 
   &.empty {
     color: var(--rds-color-text-subtle, #999);
+  }
+
+  &.corrupted {
+    color: var(--rds-color-text-danger);
+    animation: refusal-shake 0.3s ease;
   }
 }
 
@@ -126,6 +201,66 @@
     font-size: 1.3rem;
     font-weight: 700;
   }
+}
+
+/* Nap overlay */
+.nap-overlay {
+  position: absolute;
+  inset: -8px;
+  background: var(--rds-color-background-surface-raised);
+  border-radius: 16px;
+  opacity: 0.92;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rds-spacing-4);
+  animation: nap-in 0.5s ease;
+  cursor: pointer;
+  z-index: 10;
+
+  .nap-emoji {
+    font-size: 3rem;
+  }
+
+  p {
+    font-style: italic;
+    color: var(--rds-color-text-subtle, #999);
+  }
+
+  .zzz-container {
+    position: relative;
+    height: 50px;
+    width: 80px;
+
+    span {
+      position: absolute;
+      font-size: 1.5rem;
+      animation: zzz-float 2s ease-in-out infinite;
+
+      &:nth-child(1) { left: 10px; animation-delay: 0s; }
+      &:nth-child(2) { left: 30px; font-size: 2rem; animation-delay: 0.6s; }
+      &:nth-child(3) { left: 50px; font-size: 2.5rem; animation-delay: 1.2s; }
+    }
+  }
+}
+
+/* Tooltip mischief */
+.mischief-tooltip {
+  position: absolute;
+  background: var(--rds-color-background-surface-overlay);
+  border: 1px solid var(--rds-color-border-default, #e0e0e0);
+  border-radius: 6px;
+  padding: var(--rds-spacing-3) var(--rds-spacing-4);
+  font-size: 0.75rem;
+  color: var(--rds-color-text-default);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: result-pop 0.15s ease;
+  z-index: 50;
+  transform: translateX(-50%);
+  top: -36px;
+  left: 50%;
 }
 
 /* Popup overlay */
@@ -173,8 +308,8 @@
 
 button[dsa-button] {
   width: 100%;
-  animation: none;
   transition: transform 0.15s ease;
+  position: relative;
 
   &:active {
     animation: btn-bounce 0.15s ease;
@@ -196,3 +331,4 @@ button[dsa-button] {
     font-size: 1.1rem;
   }
 }
+
