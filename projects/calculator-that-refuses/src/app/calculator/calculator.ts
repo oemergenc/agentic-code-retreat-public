@@ -179,6 +179,7 @@ export class CalculatorComponent implements AfterViewInit {
 
   protected switchLocale(locale: Locale): void {
     this.i18n.setLocale(locale);
+    this.calcWrapper()?.nativeElement.focus();
   }
 
   protected onEqualsHover(): void {
