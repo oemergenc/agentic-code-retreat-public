@@ -1,0 +1,150 @@
+@keyframes sparkle {
+  0%   { transform: translateY(0) scale(0); opacity: 1; }
+  100% { transform: translateY(-80px) scale(1.4); opacity: 0; }
+}
+
+@keyframes result-pop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes refusal-shake {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-8px); }
+  30%       { transform: translateX(8px); }
+  45%       { transform: translateX(-6px); }
+  60%       { transform: translateX(6px); }
+  75%       { transform: translateX(-3px); }
+  90%       { transform: translateX(3px); }
+}
+
+@keyframes btn-bounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+:host {
+  display: block;
+}
+
+.calculator-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: var(--rds-spacing-8);
+  position: relative;
+}
+
+.sparkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rds-color-background-solid-primary);
+  left: calc(10% + var(--i, 0) * 11%);
+  bottom: 30%;
+  opacity: 0;
+}
+
+.calculator {
+  background: var(--rds-color-background-surface-raised);
+  border: 1px solid var(--rds-color-border-default, #e0e0e0);
+  border-radius: 16px;
+  padding: var(--rds-spacing-8);
+  width: 340px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Display */
+.display {
+  background: var(--rds-color-background-surface-sunken);
+  border-radius: 8px;
+  padding: var(--rds-spacing-6);
+  margin-bottom: var(--rds-spacing-6);
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--rds-spacing-3);
+}
+
+.expression {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--rds-color-text-default);
+  text-align: right;
+  word-break: break-all;
+  min-height: 2rem;
+
+  &.empty {
+    color: var(--rds-color-text-subtle, #999);
+  }
+}
+
+.output {
+  text-align: right;
+  font-size: 1rem;
+  min-height: 1.4rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  &.visible {
+    opacity: 1;
+  }
+
+  &.result {
+    color: var(--rds-color-text-success);
+    animation: result-pop 0.35s ease forwards;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  &.refusal {
+    color: var(--rds-color-text-danger);
+    animation: refusal-shake 0.5s ease;
+    font-style: italic;
+  }
+
+  &.error {
+    color: var(--rds-color-text-warning);
+  }
+}
+
+/* Keypad */
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--rds-spacing-3);
+}
+
+button[dsa-button] {
+  width: 100%;
+  animation: none;
+
+  &:active {
+    animation: btn-bounce 0.15s ease;
+  }
+
+  &.wide {
+    grid-column: span 2;
+  }
+
+  &.btn-equals {
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  &.btn-operator {
+    font-size: 1.1rem;
+  }
+}

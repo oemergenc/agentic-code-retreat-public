@@ -1,0 +1,45 @@
+<div class="calculator-wrapper">
+  <div class="sparkles" aria-hidden="true">
+    @for (_ of [1,2,3,4,5,6,7,8]; track $index) {
+      <span class="sparkle" [style.--i]="$index"></span>
+    }
+  </div>
+
+  <div class="calculator">
+    <!-- Display -->
+    <div class="display">
+      <div class="expression" [class.empty]="!calc.displayExpression()">
+        {{ calc.displayExpression() || '0' }}
+      </div>
+      <div
+        class="output"
+        [class.result]="calc.state() === 'result'"
+        [class.refusal]="calc.state() === 'refusal'"
+        [class.error]="calc.state() === 'error'"
+        [class.visible]="calc.outputText()"
+      >
+        {{ calc.outputText() }}
+      </div>
+    </div>
+
+    <!-- Keypad -->
+    <div class="keypad">
+      @for (btn of buttons; track btn.label) {
+        <button
+          dsa-button
+          type="button"
+          [class.wide]="btn.wide"
+          [class.btn-digit]="btn.type === 'digit'"
+          [class.btn-operator]="btn.type === 'operator'"
+          [class.btn-action]="btn.type === 'action'"
+          [class.btn-equals]="btn.type === 'equals'"
+          [hierarchy]="btn.type === 'equals' ? 'primary' : 'secondary'"
+          [intention]="btn.value === 'clear' ? 'danger' : 'default'"
+          (click)="press(btn)"
+        >
+          {{ btn.label }}
+        </button>
+      }
+    </div>
+  </div>
+</div>
