@@ -1,4 +1,15 @@
 <div class="calculator-wrapper" tabindex="0" #calcWrapper>
+  <!-- 😈 Mischief toggle -->
+  <div class="mischief-toggle">
+    <span class="toggle-label">😇</span>
+    <dsa-toggle-switch
+      [checked]="mischiefEnabled()"
+      ariaLabel="Toggle devil mode"
+      (change)="toggleMischief($event)"
+    />
+    <span class="toggle-label">😈</span>
+  </div>
+
   <div class="sparkles" aria-hidden="true">
     @for (_ of [1,2,3,4,5,6,7,8]; track $index) {
       <span class="sparkle" [style.--i]="$index"></span>

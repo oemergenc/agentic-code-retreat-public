@@ -84,6 +84,21 @@
   outline: none;
 }
 
+/* Mischief toggle */
+.mischief-toggle {
+  position: absolute;
+  top: var(--rds-spacing-6);
+  right: var(--rds-spacing-8);
+  display: flex;
+  align-items: center;
+  gap: var(--rds-spacing-3);
+
+  .toggle-label {
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+}
+
 .sparkles {
   position: absolute;
   inset: 0;

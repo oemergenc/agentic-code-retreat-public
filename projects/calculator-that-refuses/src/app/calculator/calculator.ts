@@ -1,5 +1,6 @@
 import { Component, inject, effect, HostListener, AfterViewInit, ElementRef, viewChild, signal, computed } from '@angular/core';
 import { DsaButtonComponent } from '@dsa/design-system-angular/button';
+import { DsaToggleSwitchComponent } from '@dsa/design-system-angular/toggle-switch';
 import { DsaToastService } from '@dsa/design-system-angular';
 import { CalculatorService } from './calculator.service';
 import { SoundService } from './sound.service';
@@ -22,7 +23,7 @@ const MISCHIEF_TOOLTIPS = [
 
 @Component({
   selector: 'app-calculator',
-  imports: [DsaButtonComponent],
+  imports: [DsaButtonComponent, DsaToggleSwitchComponent],
   templateUrl: './calculator.html',
   styleUrl: './calculator.scss',
 })
@@ -43,6 +44,7 @@ export class CalculatorComponent implements AfterViewInit {
   private popupTimer: ReturnType<typeof setInterval> | null = null;
 
   // new disturbing features
+  protected readonly mischiefEnabled = signal(true);
   protected readonly drunkLevel = signal(0);
   protected readonly isNapping = signal(false);
   protected readonly isSpinning = signal(false);
@@ -115,6 +117,7 @@ export class CalculatorComponent implements AfterViewInit {
 
   private resetNapTimer(): void {
     if (this.napTimer) clearTimeout(this.napTimer);
+    if (!this.mischiefEnabled()) return;
     this.napTimer = setTimeout(() => this.isNapping.set(true), this.NAP_DELAY);
   }
 
@@ -124,7 +127,26 @@ export class CalculatorComponent implements AfterViewInit {
     this.calcWrapper()?.nativeElement.focus();
   }
 
+  protected toggleMischief(enabled: boolean): void {
+    this.mischiefEnabled.set(enabled);
+    if (!enabled) {
+      // reset all mischief state
+      this.drunkLevel.set(0);
+      this.isNapping.set(false);
+      this.isSpinning.set(false);
+      this.isGhostFlash.set(false);
+      this.corruptedDisplay.set(null);
+      this.tooltip.set(null);
+      this.equalsOffset.set({ x: 0, y: 0 });
+      if (this.napTimer) { clearTimeout(this.napTimer); this.napTimer = null; }
+      if (this.ghostTimer) { clearTimeout(this.ghostTimer); this.ghostTimer = null; }
+    } else {
+      this.resetNapTimer();
+    }
+  }
+
   protected onEqualsHover(): void {
+    if (!this.mischiefEnabled()) return;
     const x = (Math.random() - 0.5) * 180;
     const y = (Math.random() - 0.5) * 80;
     this.equalsOffset.set({ x, y });
@@ -135,6 +157,7 @@ export class CalculatorComponent implements AfterViewInit {
   }
 
   protected onBtnHover(idx: number): void {
+    if (!this.mischiefEnabled()) return;
     if (Math.random() < 0.35) {
       const text = MISCHIEF_TOOLTIPS[Math.floor(Math.random() * MISCHIEF_TOOLTIPS.length)];
       this.tooltip.set({ idx, text });
@@ -152,9 +175,10 @@ export class CalculatorComponent implements AfterViewInit {
     this.resetNapTimer();
     this.pressCount++;
 
-    this.drunkLevel.set(Math.min(3, Math.floor(this.pressCount / 10)));
-
-    if (this.pressCount % 7 === 0) this.doSwap();
+    if (this.mischiefEnabled()) {
+      this.drunkLevel.set(Math.min(3, Math.floor(this.pressCount / 10)));
+      if (this.pressCount % 7 === 0) this.doSwap();
+    }
 
     switch (btn.value) {
       case 'clear':
@@ -172,8 +196,10 @@ export class CalculatorComponent implements AfterViewInit {
       default: {
         const swapped = this.swapMap()[idx];
         this.calc.append(swapped ?? btn.value);
-        this.maybeGhostType();
-        this.maybeCorruptDisplay();
+        if (this.mischiefEnabled()) {
+          this.maybeGhostType();
+          this.maybeCorruptDisplay();
+        }
       }
     }
   }
@@ -204,7 +230,7 @@ export class CalculatorComponent implements AfterViewInit {
   }
 
   private pressEquals(): void {
-    if (Math.random() < 0.3) {
+    if (this.mischiefEnabled() && Math.random() < 0.3) {
       this.showFakeResult();
     } else {
       this.doRealCalculate();
@@ -225,7 +251,7 @@ export class CalculatorComponent implements AfterViewInit {
 
   private doRealCalculate(): void {
     this.calc.calculate();
-    if (this.calc.state() === 'result') {
+    if (this.calc.state() === 'result' && this.mischiefEnabled()) {
       this.calcCount++;
       if (Math.random() < 0.15) {
         this.isSpinning.set(true);
