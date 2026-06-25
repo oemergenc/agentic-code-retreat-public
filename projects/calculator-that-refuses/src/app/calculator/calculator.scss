@@ -99,6 +99,13 @@
   }
 }
 
+/* Persona toggle */
+.persona-toggle {
+  position: absolute;
+  top: calc(var(--rds-spacing-6) + 2.8rem);
+  right: var(--rds-spacing-8);
+}
+
 /* Locale switcher */
 .locale-switcher {
   position: absolute;

@@ -177,6 +177,12 @@ export class CalculatorComponent implements AfterViewInit {
     }
   }
 
+  protected togglePersona(): void {
+    const next = this.calc.persona() === 'default' ? 'cheerleader' : 'default';
+    this.calc.setPersona(next);
+    this.calcWrapper()?.nativeElement.focus();
+  }
+
   protected switchLocale(locale: Locale): void {
     this.i18n.setLocale(locale);
     this.calcWrapper()?.nativeElement.focus();

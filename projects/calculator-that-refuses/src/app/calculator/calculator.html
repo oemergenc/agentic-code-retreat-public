@@ -10,6 +10,16 @@
     <span class="toggle-label">😈</span>
   </div>
 
+  <!-- 📣 Persona toggle -->
+  <div class="persona-toggle">
+    <button
+      dsa-button
+      type="button"
+      [hierarchy]="calc.persona() === 'default' ? 'secondary' : 'primary'"
+      (click)="togglePersona()"
+    >{{ calc.persona() === 'default' ? '😇 Default' : '📣 Cheerleader' }}</button>
+  </div>
+
   <!-- 🌍 Locale switcher -->
   <div class="locale-switcher">
     <button
