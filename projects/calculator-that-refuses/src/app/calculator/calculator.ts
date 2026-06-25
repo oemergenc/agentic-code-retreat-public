@@ -1,4 +1,4 @@
-import { Component, inject, effect } from '@angular/core';
+import { Component, inject, effect, HostListener } from '@angular/core';
 import { DsaButtonComponent } from '@dsa/design-system-angular/button';
 import { DsaToastService } from '@dsa/design-system-angular';
 import { CalculatorService } from './calculator.service';
@@ -81,6 +81,49 @@ export class CalculatorComponent {
         break;
       default:
         this.calc.append(btn.value);
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  protected onKeydown(event: KeyboardEvent): void {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+    const key = event.key;
+    if (/^[0-9]$/.test(key) || key === '.') {
+      event.preventDefault();
+      this.sound.playClick();
+      this.calc.append(key);
+    } else if (key === '+') {
+      event.preventDefault();
+      this.sound.playClick();
+      this.calc.append('+');
+    } else if (key === '-') {
+      event.preventDefault();
+      this.sound.playClick();
+      this.calc.append('−');
+    } else if (key === '*') {
+      event.preventDefault();
+      this.sound.playClick();
+      this.calc.append('×');
+    } else if (key === '/') {
+      event.preventDefault();
+      this.sound.playClick();
+      this.calc.append('÷');
+    } else if (key === '(' || key === ')') {
+      event.preventDefault();
+      this.sound.playClick();
+      this.calc.append(key);
+    } else if (key === 'Enter' || key === '=') {
+      event.preventDefault();
+      this.calc.calculate();
+    } else if (key === 'Backspace') {
+      event.preventDefault();
+      this.sound.playClick();
+      this.calc.backspace();
+    } else if (key === 'Escape' || key === 'Delete') {
+      event.preventDefault();
+      this.sound.playClick();
+      this.calc.clear();
     }
   }
 }
