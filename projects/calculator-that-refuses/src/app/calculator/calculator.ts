@@ -2,6 +2,7 @@ import { Component, inject, effect } from '@angular/core';
 import { DsaButtonComponent } from '@dsa/design-system-angular/button';
 import { DsaToastService } from '@dsa/design-system-angular';
 import { CalculatorService } from './calculator.service';
+import { SoundService } from './sound.service';
 
 interface CalcButton {
   label: string;
@@ -19,6 +20,7 @@ interface CalcButton {
 export class CalculatorComponent {
   protected readonly calc = inject(CalculatorService);
   private readonly toast = inject(DsaToastService);
+  private readonly sound = inject(SoundService);
 
   protected readonly buttons: CalcButton[] = [
     { label: 'C', value: 'clear', type: 'action' },
@@ -51,16 +53,22 @@ export class CalculatorComponent {
     effect(() => {
       const state = this.calc.state();
       if (state === 'result') {
+        this.sound.playResult();
         this.toast.success({
           title: '✨ Calculated!',
           description: this.calc.outputText(),
           timeout: 2500,
         });
+      } else if (state === 'refusal') {
+        this.sound.playRefusal();
+      } else if (state === 'error') {
+        this.sound.playError();
       }
     });
   }
 
   protected press(btn: CalcButton): void {
+    this.sound.playClick();
     switch (btn.value) {
       case 'clear':
         this.calc.clear();
